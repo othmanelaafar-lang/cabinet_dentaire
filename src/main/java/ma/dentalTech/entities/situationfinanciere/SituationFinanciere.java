@@ -1,5 +1,7 @@
 package ma.dentalTech.entities.situationfinanciere;
 
+import ma.dentalTech.entities.enums.Statut;
+
 import java.time.LocalDateTime;
 
 public class SituationFinanciere {
@@ -7,6 +9,6 @@ public class SituationFinanciere {
     public double totaleFacture;
     public double totalepaye;
     public double Reste;
-    public String staut;
+    public Statut staut;
     public LocalDateTime dateFacture;
 }
