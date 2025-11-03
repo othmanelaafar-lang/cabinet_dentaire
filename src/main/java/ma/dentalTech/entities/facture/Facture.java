@@ -1,5 +1,11 @@
 package ma.dentalTech.entities.facture;
 
-public class Facture {
+import java.time.LocalDateTime;
 
+public class Facture {
+public long idFacture;
+public double totalepaye;
+public double Reste;
+public String statut;
+public LocalDateTime dateFacture;
 }
