@@ -41,27 +41,21 @@ public class UtilisateurServiceImpl implements UtilisateurService {
             
             // Vérifier l'unicité du login
             if (utilisateur.idUser == null) { // Nouvel utilisateur
-                // Le repository n'a pas findByLogin, on cherche dans findAll
-                boolean loginExists = repository.findAll().stream()
-                        .anyMatch(u -> u.login != null && u.login.equals(utilisateur.login));
-                if (loginExists) {
+                Optional<Utilisateur> existing = repository.findByLogin(utilisateur.login);
+                if (existing.isPresent()) {
                     throw new ValidationException("Ce login est déjà utilisé");
                 }
             } else { // Mise à jour
-                boolean loginExists = repository.findAll().stream()
-                        .anyMatch(u -> u.login != null && u.login.equals(utilisateur.login) && 
-                                     !u.idUser.equals(utilisateur.idUser));
-                if (loginExists) {
+                Optional<Utilisateur> existing = repository.findByLogin(utilisateur.login);
+                if (existing.isPresent() && !existing.get().idUser.equals(utilisateur.idUser)) {
                     throw new ValidationException("Ce login est déjà utilisé");
                 }
             }
             
             // Vérifier l'unicité de l'email si fourni
             if (utilisateur.email != null && !utilisateur.email.trim().isEmpty()) {
-                boolean emailExists = repository.findAll().stream()
-                        .anyMatch(u -> u.email != null && u.email.equals(utilisateur.email) && 
-                                     (utilisateur.idUser == null || !u.idUser.equals(utilisateur.idUser)));
-                if (emailExists) {
+                Optional<Utilisateur> existing = repository.findByEmail(utilisateur.email);
+                if (existing.isPresent() && (utilisateur.idUser == null || !existing.get().idUser.equals(utilisateur.idUser))) {
                     throw new ValidationException("Cet email est déjà utilisé");
                 }
             }
@@ -164,10 +158,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         if (login == null || login.trim().isEmpty()) {
             return Optional.empty();
         }
-        // Le repository n'a pas cette méthode, on cherche dans findAll
-        return repository.findAll().stream()
-                .filter(u -> u.login != null && u.login.equals(login.trim()))
-                .findFirst();
+        return repository.findByLogin(login.trim());
     }
 
     @Override
@@ -175,10 +166,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         if (email == null || email.trim().isEmpty()) {
             return Optional.empty();
         }
-        // Le repository n'a pas cette méthode, on cherche dans findAll
-        return repository.findAll().stream()
-                .filter(u -> u.email != null && u.email.equals(email.trim()))
-                .findFirst();
+        return repository.findByEmail(email.trim());
     }
 
     @Override
@@ -186,11 +174,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         if (nom == null || nom.trim().isEmpty()) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        String searchTerm = nom.trim().toLowerCase();
-        return repository.findAll().stream()
-                .filter(u -> u.nom != null && u.nom.toLowerCase().contains(searchTerm))
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByNom(nom.trim());
     }
 
     @Override

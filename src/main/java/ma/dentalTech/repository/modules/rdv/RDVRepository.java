@@ -26,4 +26,10 @@ public interface RDVRepository extends CrudRepository<RDV, Long> {
     
     // Vérifier si un RDV existe déjà à cette date et heure
     boolean existsByDateAndHeure(LocalDate date, LocalTime heure);
+    
+    // Trouver les RDV d'un patient (nécessite un champ patientId dans RDV)
+    List<RDV> findByPatientId(Long patientId);
+    
+    // Trouver les RDV d'un médecin (nécessite un champ medecinId dans RDV)
+    List<RDV> findByMedecinId(Long medecinId);
 }

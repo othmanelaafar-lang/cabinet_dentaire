@@ -116,11 +116,7 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
         if (consultationId == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        // Note: nécessite que l'entité Ordonnance ait un champ consultationId
-        return repository.findAll().stream()
-                .filter(ord -> ord.idOrd != 0) // Placeholder - adapter selon la structure réelle
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByConsultationId(consultationId);
     }
 
     @Override
@@ -128,12 +124,7 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
         if (date == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        // Note: l'entité Ordonnance a des champs date et LocalDate qui sont des long
-        // Cette méthode nécessite une adaptation selon la structure réelle
-        return repository.findAll().stream()
-                .filter(ord -> ord.date != 0 || ord.LocalDate != 0) // Placeholder
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByDate(date);
     }
 
     @Override
@@ -144,11 +135,7 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
         if (dateDebut.isAfter(dateFin)) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        // Note: nécessite une conversion des champs date/LocalDate (long) vers LocalDate
-        return repository.findAll().stream()
-                .filter(ord -> ord.date != 0 || ord.LocalDate != 0) // Placeholder
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByDateRange(dateDebut, dateFin);
     }
 }
 

@@ -136,11 +136,7 @@ public class FactureServiceImpl implements FactureService {
         if (patientId == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        // Note: nécessite que l'entité Facture ait un champ patientId
-        return repository.findAll().stream()
-                .filter(fact -> fact.idFacture != 0) // Placeholder - adapter selon la structure réelle
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByPatientId(patientId);
     }
 
     @Override
@@ -151,12 +147,7 @@ public class FactureServiceImpl implements FactureService {
         if (dateDebut.isAfter(dateFin)) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        return repository.findAll().stream()
-                .filter(fact -> fact.dateFacture != null && 
-                               !fact.dateFacture.isBefore(dateDebut) && 
-                               !fact.dateFacture.isAfter(dateFin))
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByDateRange(dateDebut, dateFin);
     }
 
     @Override
@@ -164,10 +155,7 @@ public class FactureServiceImpl implements FactureService {
         if (statut == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        return repository.findAll().stream()
-                .filter(fact -> fact.statut == statut)
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByStatut(statut);
     }
 
     @Override

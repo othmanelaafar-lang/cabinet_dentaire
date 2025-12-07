@@ -149,11 +149,7 @@ public class RDVServiceImpl implements RDVService {
         if (patientId == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        // Note: nécessite que l'entité RDV ait un champ patientId
-        return repository.findAll().stream()
-                .filter(rdv -> rdv.idRDV != null) // Placeholder - adapter selon la structure réelle
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByPatientId(patientId);
     }
 
     @Override
@@ -161,11 +157,7 @@ public class RDVServiceImpl implements RDVService {
         if (medecinId == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        // Note: nécessite que l'entité RDV ait un champ medecinId
-        return repository.findAll().stream()
-                .filter(rdv -> rdv.idRDV != null) // Placeholder - adapter selon la structure réelle
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByMedecinId(medecinId);
     }
 
     @Override

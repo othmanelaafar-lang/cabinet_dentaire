@@ -126,11 +126,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         if (patientId == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        // Note: nécessite que l'entité Consultation ait un champ patientId
-        return repository.findAll().stream()
-                .filter(cons -> cons.idConsultation != 0) // Placeholder - adapter selon la structure réelle
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByPatientId(patientId);
     }
 
     @Override
@@ -138,11 +134,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         if (medecinId == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        // Note: nécessite que l'entité Consultation ait un champ medecinId
-        return repository.findAll().stream()
-                .filter(cons -> cons.idConsultation != 0) // Placeholder - adapter selon la structure réelle
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByMedecinId(medecinId);
     }
 
     @Override
@@ -150,10 +142,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         if (date == null) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        return repository.findAll().stream()
-                .filter(cons -> cons.Date != null && cons.Date.equals(date))
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByDate(date);
     }
 
     @Override
@@ -164,12 +153,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         if (dateDebut.isAfter(dateFin)) {
             return List.of();
         }
-        // Le repository n'a pas cette méthode, on filtre depuis findAll
-        return repository.findAll().stream()
-                .filter(cons -> cons.Date != null && 
-                               !cons.Date.isBefore(dateDebut) && 
-                               !cons.Date.isAfter(dateFin))
-                .collect(java.util.stream.Collectors.toList());
+        return repository.findByDateRange(dateDebut, dateFin);
     }
 
     @Override
