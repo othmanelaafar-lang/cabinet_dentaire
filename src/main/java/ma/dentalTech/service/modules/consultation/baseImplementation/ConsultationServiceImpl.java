@@ -25,13 +25,22 @@ public class ConsultationServiceImpl implements ConsultationService {
      */
     private void validateConsultation(Consultation consultation) throws ServiceException {
         try {
-            if (consultation.Date == null) {
+            LocalDate dateConsultation = consultation.dateConsultation != null ? consultation.dateConsultation : consultation.Date;
+            if (dateConsultation == null) {
                 throw new ValidationException("La date de consultation est obligatoire");
             }
             
             // La date ne doit pas être dans le futur
-            if (consultation.Date.isAfter(LocalDate.now())) {
+            if (dateConsultation.isAfter(LocalDate.now())) {
                 throw new ValidationException("La date de consultation ne peut pas être dans le futur");
+            }
+            
+            if (consultation.patientId == null) {
+                throw new ValidationException("L'ID du patient est obligatoire");
+            }
+            
+            if (consultation.medecinId == null) {
+                throw new ValidationException("L'ID du médecin est obligatoire");
             }
         } catch (ValidationException e) {
             throw new ServiceException("Erreur de validation : " + e.getMessage(), e);
@@ -48,7 +57,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         if (id == null) {
             return null;
         }
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
@@ -77,11 +86,11 @@ public class ConsultationServiceImpl implements ConsultationService {
             throw new ServiceException("La consultation ne peut pas être null");
         }
         
-        if (consultation.idConsultation == 0) {
+        if (consultation.idConsultation == null) {
             throw new ServiceException("L'ID de la consultation est requis pour la mise à jour");
         }
         
-        Consultation existing = repository.findById(consultation.idConsultation);
+        Consultation existing = repository.findById(consultation.idConsultation).orElse(null);
         if (existing == null) {
             throw new ServiceException("Consultation avec ID " + consultation.idConsultation + " introuvable");
         }
@@ -101,7 +110,7 @@ public class ConsultationServiceImpl implements ConsultationService {
             throw new ServiceException("L'ID ne peut pas être null");
         }
         
-        Consultation consultation = repository.findById(id);
+        Consultation consultation = repository.findById(id).orElse(null);
         if (consultation == null) {
             throw new ServiceException("Consultation avec ID " + id + " introuvable");
         }
@@ -118,7 +127,9 @@ public class ConsultationServiceImpl implements ConsultationService {
         if (consultation == null) {
             throw new ServiceException("La consultation ne peut pas être null");
         }
-        deleteById(consultation.idConsultation);
+        if (consultation.idConsultation != null) {
+            deleteById(consultation.idConsultation);
+        }
     }
 
     @Override

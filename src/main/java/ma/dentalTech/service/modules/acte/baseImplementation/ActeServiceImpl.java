@@ -25,11 +25,13 @@ public class ActeServiceImpl implements ActeService {
      */
     private void validateActe(Acte acte) throws ServiceException {
         try {
+            Validators.notBlank(acte.code, "Le code");
             Validators.notBlank(acte.libelle, "Le libellé");
             Validators.minLen(acte.libelle, 3, "Le libellé");
             
-            if (acte.prixDeBase < 0) {
-                throw new ValidationException("Le prix de base ne peut pas être négatif");
+            double prix = acte.prixUnitaire != null ? acte.prixUnitaire.doubleValue() : acte.prixDeBase;
+            if (prix < 0) {
+                throw new ValidationException("Le prix ne peut pas être négatif");
             }
         } catch (ValidationException e) {
             throw new ServiceException("Erreur de validation : " + e.getMessage(), e);
@@ -46,7 +48,7 @@ public class ActeServiceImpl implements ActeService {
         if (id == null) {
             return null;
         }
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
@@ -70,11 +72,11 @@ public class ActeServiceImpl implements ActeService {
             throw new ServiceException("L'acte ne peut pas être null");
         }
         
-        if (acte.idActe == 0) {
+        if (acte.idActe == null) {
             throw new ServiceException("L'ID de l'acte est requis pour la mise à jour");
         }
         
-        Acte existing = repository.findById(acte.idActe);
+        Acte existing = repository.findById(acte.idActe).orElse(null);
         if (existing == null) {
             throw new ServiceException("Acte avec ID " + acte.idActe + " introuvable");
         }
@@ -94,7 +96,7 @@ public class ActeServiceImpl implements ActeService {
             throw new ServiceException("L'ID ne peut pas être null");
         }
         
-        Acte acte = repository.findById(id);
+        Acte acte = repository.findById(id).orElse(null);
         if (acte == null) {
             throw new ServiceException("Acte avec ID " + id + " introuvable");
         }
@@ -111,7 +113,9 @@ public class ActeServiceImpl implements ActeService {
         if (acte == null) {
             throw new ServiceException("L'acte ne peut pas être null");
         }
-        deleteById(acte.idActe);
+        if (acte.idActe != null) {
+            deleteById(acte.idActe);
+        }
     }
 
     @Override
@@ -183,7 +187,7 @@ public class ActeServiceImpl implements ActeService {
             throw new ServiceException("Le prix ne peut pas être négatif");
         }
         
-        Acte acte = repository.findById(id);
+        Acte acte = repository.findById(id).orElse(null);
         if (acte == null) {
             throw new ServiceException("Acte avec ID " + id + " introuvable");
         }

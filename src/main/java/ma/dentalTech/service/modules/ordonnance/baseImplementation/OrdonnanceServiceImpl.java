@@ -25,8 +25,12 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
     private void validateOrdonnance(Ordonnance ordonnance) throws ServiceException {
         try {
             // Validation basique - peut être étendue selon les besoins
-            if (ordonnance.date == 0 && ordonnance.LocalDate == 0) {
+            if (ordonnance.date == null && ordonnance.dateEmission == null) {
                 throw new ValidationException("La date de l'ordonnance est obligatoire");
+            }
+            
+            if (ordonnance.consultationId == null) {
+                throw new ValidationException("L'ID de la consultation est obligatoire");
             }
         } catch (ValidationException e) {
             throw new ServiceException("Erreur de validation : " + e.getMessage(), e);
@@ -43,7 +47,7 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
         if (id == null) {
             return null;
         }
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
@@ -67,11 +71,11 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
             throw new ServiceException("L'ordonnance ne peut pas être null");
         }
         
-        if (ordonnance.idOrd == 0) {
+        if (ordonnance.idOrd == null) {
             throw new ServiceException("L'ID de l'ordonnance est requis pour la mise à jour");
         }
         
-        Ordonnance existing = repository.findById(ordonnance.idOrd);
+        Ordonnance existing = repository.findById(ordonnance.idOrd).orElse(null);
         if (existing == null) {
             throw new ServiceException("Ordonnance avec ID " + ordonnance.idOrd + " introuvable");
         }
@@ -91,7 +95,7 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
             throw new ServiceException("L'ID ne peut pas être null");
         }
         
-        Ordonnance ordonnance = repository.findById(id);
+        Ordonnance ordonnance = repository.findById(id).orElse(null);
         if (ordonnance == null) {
             throw new ServiceException("Ordonnance avec ID " + id + " introuvable");
         }
@@ -108,7 +112,9 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
         if (ordonnance == null) {
             throw new ServiceException("L'ordonnance ne peut pas être null");
         }
-        deleteById(ordonnance.idOrd);
+        if (ordonnance.idOrd != null) {
+            deleteById(ordonnance.idOrd);
+        }
     }
 
     @Override

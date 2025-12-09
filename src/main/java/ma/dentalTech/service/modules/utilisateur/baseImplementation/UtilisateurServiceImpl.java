@@ -74,7 +74,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         if (id == null) {
             return null;
         }
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
             throw new ServiceException("L'ID de l'utilisateur est requis pour la mise à jour");
         }
         
-        Utilisateur existing = repository.findById(utilisateur.idUser);
+        Utilisateur existing = repository.findById(utilisateur.idUser).orElse(null);
         if (existing == null) {
             throw new ServiceException("Utilisateur avec ID " + utilisateur.idUser + " introuvable");
         }
@@ -133,7 +133,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
             throw new ServiceException("L'ID ne peut pas être null");
         }
         
-        Utilisateur utilisateur = repository.findById(id);
+        Utilisateur utilisateur = repository.findById(id).orElse(null);
         if (utilisateur == null) {
             throw new ServiceException("Utilisateur avec ID " + id + " introuvable");
         }
@@ -217,7 +217,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
             throw new ServiceException("Le nouveau mot de passe doit contenir au moins 6 caractères");
         }
         
-        Utilisateur utilisateur = repository.findById(userId);
+        Utilisateur utilisateur = repository.findById(userId).orElse(null);
         if (utilisateur == null) {
             throw new ServiceException("Utilisateur avec ID " + userId + " introuvable");
         }

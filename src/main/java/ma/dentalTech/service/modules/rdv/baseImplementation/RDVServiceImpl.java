@@ -27,17 +27,25 @@ public class RDVServiceImpl implements RDVService {
      */
     private void validateRDV(RDV rdv) throws ServiceException {
         try {
-            if (rdv.Date == null) {
-                throw new ValidationException("La date du rendez-vous est obligatoire");
+            if (rdv.dateHeureDebut == null && rdv.Date == null) {
+                throw new ValidationException("La date et l'heure du rendez-vous sont obligatoires");
             }
             
-            if (rdv.heure == null) {
-                throw new ValidationException("L'heure du rendez-vous est obligatoire");
+            if (rdv.patientId == null) {
+                throw new ValidationException("L'ID du patient est obligatoire");
             }
             
-            // La date ne doit pas être dans le passé
-            if (rdv.Date.isBefore(LocalDate.now())) {
+            if (rdv.medecinId == null) {
+                throw new ValidationException("L'ID du médecin est obligatoire");
+            }
+            
+            LocalDate dateRDV = rdv.Date != null ? rdv.Date : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalDate() : null);
+            if (dateRDV != null && dateRDV.isBefore(LocalDate.now())) {
                 throw new ValidationException("La date du rendez-vous ne peut pas être dans le passé");
+            }
+            
+            if (rdv.motifConsultation != null && rdv.motifConsultation.trim().length() < 3) {
+                throw new ValidationException("Le motif doit contenir au moins 3 caractères");
             }
             
             if (rdv.motif != null && rdv.motif.trim().length() < 3) {
@@ -58,7 +66,7 @@ public class RDVServiceImpl implements RDVService {
         if (id == null) {
             return null;
         }
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
@@ -70,7 +78,9 @@ public class RDVServiceImpl implements RDVService {
         validateRDV(rdv);
         
         // Vérifier la disponibilité du créneau
-        if (!isCreneauDisponible(null, rdv.Date, rdv.heure)) {
+        LocalDate dateRDV = rdv.Date != null ? rdv.Date : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalDate() : LocalDate.now());
+        LocalTime heureRDV = rdv.heure != null ? rdv.heure : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalTime() : null);
+        if (heureRDV != null && !isCreneauDisponible(rdv.medecinId, dateRDV, heureRDV)) {
             throw new ServiceException("Ce créneau n'est pas disponible");
         }
         
@@ -96,7 +106,7 @@ public class RDVServiceImpl implements RDVService {
             throw new ServiceException("L'ID du rendez-vous est requis pour la mise à jour");
         }
         
-        RDV existing = repository.findById(rdv.idRDV);
+        RDV existing = repository.findById(rdv.idRDV).orElse(null);
         if (existing == null) {
             throw new ServiceException("Rendez-vous avec ID " + rdv.idRDV + " introuvable");
         }
@@ -116,7 +126,7 @@ public class RDVServiceImpl implements RDVService {
             throw new ServiceException("L'ID ne peut pas être null");
         }
         
-        RDV rdv = repository.findById(id);
+        RDV rdv = repository.findById(id).orElse(null);
         if (rdv == null) {
             throw new ServiceException("Rendez-vous avec ID " + id + " introuvable");
         }
@@ -133,7 +143,9 @@ public class RDVServiceImpl implements RDVService {
         if (rdv == null) {
             throw new ServiceException("Le rendez-vous ne peut pas être null");
         }
-        deleteById(rdv.idRDV);
+        if (rdv.idRDV != null) {
+            deleteById(rdv.idRDV);
+        }
     }
 
     @Override

@@ -98,7 +98,7 @@ public class PatientServiceImpl implements PatientService {
         if (id == null) {
             return null;
         }
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
@@ -137,7 +137,7 @@ public class PatientServiceImpl implements PatientService {
         }
         
         // Vérifier que le patient existe
-        Patient existing = repository.findById(patient.getId());
+        Patient existing = repository.findById(patient.getId()).orElse(null);
         if (existing == null) {
             throw new ServiceException("Patient avec ID " + patient.getId() + " introuvable");
         }
@@ -160,7 +160,7 @@ public class PatientServiceImpl implements PatientService {
             throw new ServiceException("L'ID ne peut pas être null");
         }
         
-        Patient patient = repository.findById(id);
+        Patient patient = repository.findById(id).orElse(null);
         if (patient == null) {
             throw new ServiceException("Patient avec ID " + id + " introuvable");
         }

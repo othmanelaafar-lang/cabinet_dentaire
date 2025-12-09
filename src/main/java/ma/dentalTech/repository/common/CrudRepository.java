@@ -42,6 +42,13 @@ public interface CrudRepository<T, ID> {
     long count();
 
     /**
+     * Crée une nouvelle entité.
+     *
+     * @param entity l'entité à créer
+     */
+    void create(T entity);
+
+    /**
      * Enregistre une nouvelle entité.
      *
      * @param entity l'entité à enregistrer

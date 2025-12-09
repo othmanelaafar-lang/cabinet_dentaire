@@ -86,11 +86,10 @@ public class PatientRepositoryImpl implements PatientRepository {
     }
 
     @Override
-    public Patient findById(Long id) {
+    public Optional<Patient> findById(Long id) {
         return findAll().stream()
                 .filter(p -> Objects.equals(p.getId(), id))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     @Override
@@ -107,16 +106,65 @@ public class PatientRepositoryImpl implements PatientRepository {
     }
 
     @Override
-    public void update(Patient patient) {
+    public <S extends Patient> S save(S patient) {
+        if (patient.getId() == null) {
+            create(patient);
+            return patient;
+        } else {
+            update(patient);
+            return patient;
+        }
+    }
+
+    @Override
+    public <S extends Patient> List<S> saveAll(Iterable<S> entities) {
+        List<S> saved = new ArrayList<>();
+        for (S entity : entities) {
+            saved.add(save(entity));
+        }
+        return saved;
+    }
+
+    @Override
+    public <S extends Patient> S update(S patient) {
         List<Patient> patients = findAll();
         for (int i = 0; i < patients.size(); i++) {
             if (Objects.equals(patients.get(i).getId(), patient.getId())) {
                 patients.set(i, patient);
                 saveAll(patients);
-                return;
+                return patient;
             }
         }
         throw new RuntimeException("Patient avec ID " + patient.getId() + " introuvable.");
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return findById(id).isPresent();
+    }
+
+    @Override
+    public long count() {
+        return findAll().size();
+    }
+
+    @Override
+    public void deleteAll() {
+        writeAllLines(List.of(HEADER));
+    }
+
+    @Override
+    public void deleteAll(Iterable<? extends Patient> entities) {
+        List<Long> idsToDelete = new ArrayList<>();
+        for (Patient entity : entities) {
+            if (entity != null && entity.getId() != null) {
+                idsToDelete.add(entity.getId());
+            }
+        }
+        List<Patient> patients = findAll().stream()
+                .filter(p -> !idsToDelete.contains(p.getId()))
+                .collect(Collectors.toList());
+        saveAll(patients);
     }
 
     @Override

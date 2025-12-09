@@ -1,10 +1,11 @@
 package ma.dentalTech.entities.ordonnance;
 
-import java.security.PublicKey;
+import java.time.LocalDate;
 
 public class Ordonnance {
-    public long idOrd;
-    public long LocalDate;
-    public long date;
-
+    public Long idOrd;
+    public Long consultationId;
+    public LocalDate date;
+    public LocalDate dateEmission;
+    public String notes;
 }

@@ -32,6 +32,10 @@ public class FactureServiceImpl implements FactureService {
             if (facture.Reste < 0) {
                 throw new ValidationException("Le reste à payer ne peut pas être négatif");
             }
+            
+            if (facture.consultationId == null && facture.patientId == null) {
+                throw new ValidationException("L'ID de la consultation ou du patient est obligatoire");
+            }
         } catch (ValidationException e) {
             throw new ServiceException("Erreur de validation : " + e.getMessage(), e);
         }
@@ -47,7 +51,7 @@ public class FactureServiceImpl implements FactureService {
         if (id == null) {
             return null;
         }
-        return repository.findById(id);
+        return repository.findById(id).orElse(null);
     }
 
     @Override
@@ -87,11 +91,11 @@ public class FactureServiceImpl implements FactureService {
             throw new ServiceException("La facture ne peut pas être null");
         }
         
-        if (facture.idFacture == 0) {
+        if (facture.idFacture == null) {
             throw new ServiceException("L'ID de la facture est requis pour la mise à jour");
         }
         
-        Facture existing = repository.findById(facture.idFacture);
+        Facture existing = repository.findById(facture.idFacture).orElse(null);
         if (existing == null) {
             throw new ServiceException("Facture avec ID " + facture.idFacture + " introuvable");
         }
@@ -111,7 +115,7 @@ public class FactureServiceImpl implements FactureService {
             throw new ServiceException("L'ID ne peut pas être null");
         }
         
-        Facture facture = repository.findById(id);
+        Facture facture = repository.findById(id).orElse(null);
         if (facture == null) {
             throw new ServiceException("Facture avec ID " + id + " introuvable");
         }
@@ -128,7 +132,9 @@ public class FactureServiceImpl implements FactureService {
         if (facture == null) {
             throw new ServiceException("La facture ne peut pas être null");
         }
-        deleteById(facture.idFacture);
+        if (facture.idFacture != null) {
+            deleteById(facture.idFacture);
+        }
     }
 
     @Override
