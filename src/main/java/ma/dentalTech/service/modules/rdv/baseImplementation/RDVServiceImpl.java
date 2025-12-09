@@ -27,8 +27,16 @@ public class RDVServiceImpl implements RDVService {
      */
     private void validateRDV(RDV rdv) throws ServiceException {
         try {
-            if (rdv.dateHeureDebut == null && rdv.Date == null) {
-                throw new ValidationException("La date et l'heure du rendez-vous sont obligatoires");
+            // Vérifier que la date est fournie
+            LocalDate dateRDV = rdv.Date != null ? rdv.Date : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalDate() : null);
+            if (dateRDV == null) {
+                throw new ValidationException("La date du rendez-vous est obligatoire");
+            }
+            
+            // Vérifier que l'heure est fournie (soit via heure, soit via dateHeureDebut)
+            LocalTime heureRDV = rdv.heure != null ? rdv.heure : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalTime() : null);
+            if (heureRDV == null) {
+                throw new ValidationException("L'heure du rendez-vous est obligatoire");
             }
             
             if (rdv.patientId == null) {
@@ -39,8 +47,8 @@ public class RDVServiceImpl implements RDVService {
                 throw new ValidationException("L'ID du médecin est obligatoire");
             }
             
-            LocalDate dateRDV = rdv.Date != null ? rdv.Date : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalDate() : null);
-            if (dateRDV != null && dateRDV.isBefore(LocalDate.now())) {
+            // La date ne doit pas être dans le passé
+            if (dateRDV.isBefore(LocalDate.now())) {
                 throw new ValidationException("La date du rendez-vous ne peut pas être dans le passé");
             }
             
@@ -78,9 +86,11 @@ public class RDVServiceImpl implements RDVService {
         validateRDV(rdv);
         
         // Vérifier la disponibilité du créneau
-        LocalDate dateRDV = rdv.Date != null ? rdv.Date : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalDate() : LocalDate.now());
-        LocalTime heureRDV = rdv.heure != null ? rdv.heure : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalTime() : null);
-        if (heureRDV != null && !isCreneauDisponible(rdv.medecinId, dateRDV, heureRDV)) {
+        // À ce stade, on est sûr que dateRDV et heureRDV ne sont pas null grâce à validateRDV
+        LocalDate dateRDV = rdv.Date != null ? rdv.Date : rdv.dateHeureDebut.toLocalDate();
+        LocalTime heureRDV = rdv.heure != null ? rdv.heure : rdv.dateHeureDebut.toLocalTime();
+        
+        if (!isCreneauDisponible(rdv.medecinId, dateRDV, heureRDV)) {
             throw new ServiceException("Ce créneau n'est pas disponible");
         }
         

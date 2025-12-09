@@ -102,7 +102,8 @@ public class PatientRepositoryImpl implements PatientRepository {
         if (patient.getDateCreation() == null)
             patient.setDateCreation(LocalDateTime.now());
         patients.add(patient);
-        saveAll(patients);
+        // Utiliser la méthode privée pour écrire directement dans le fichier
+        saveAllToFile(patients);
     }
 
     @Override
@@ -131,7 +132,9 @@ public class PatientRepositoryImpl implements PatientRepository {
         for (int i = 0; i < patients.size(); i++) {
             if (Objects.equals(patients.get(i).getId(), patient.getId())) {
                 patients.set(i, patient);
-                saveAll(patients);
+                // Utiliser la méthode privée saveAll qui écrit directement dans le fichier
+                // au lieu de la méthode publique saveAll qui créerait une boucle infinie
+                saveAllToFile(patients);
                 return patient;
             }
         }
@@ -164,7 +167,8 @@ public class PatientRepositoryImpl implements PatientRepository {
         List<Patient> patients = findAll().stream()
                 .filter(p -> !idsToDelete.contains(p.getId()))
                 .collect(Collectors.toList());
-        saveAll(patients);
+        // Utiliser la méthode privée pour écrire directement dans le fichier
+        saveAllToFile(patients);
     }
 
     @Override
@@ -178,12 +182,17 @@ public class PatientRepositoryImpl implements PatientRepository {
         List<Patient> patients = findAll().stream()
                 .filter(p -> !Objects.equals(p.getId(), id))
                 .collect(Collectors.toList());
-        saveAll(patients);
+        // Utiliser la méthode privée pour écrire directement dans le fichier
+        saveAllToFile(patients);
     }
 
     // ===================== UTILITAIRES =====================
 
-    private void saveAll(List<Patient> patients) {
+    /**
+     * Méthode privée pour sauvegarder directement la liste complète de patients dans le fichier
+     * Utilisée par update, deleteById, deleteAll, etc. pour éviter les boucles infinies
+     */
+    private void saveAllToFile(List<Patient> patients) {
         List<String> lines = new ArrayList<>();
         lines.add(HEADER);
         for (Patient p : patients) {

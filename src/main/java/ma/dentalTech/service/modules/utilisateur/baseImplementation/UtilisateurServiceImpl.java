@@ -150,7 +150,9 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         if (utilisateur == null) {
             throw new ServiceException("L'utilisateur ne peut pas être null");
         }
-        deleteById(utilisateur.idUser);
+        if (utilisateur.idUser != null) {
+            deleteById(utilisateur.idUser);
+        }
     }
 
     @Override
@@ -244,7 +246,7 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         }
         
         try {
-            Utilisateur utilisateur = repository.findById(userId);
+            Utilisateur utilisateur = repository.findById(userId).orElse(null);
             if (utilisateur != null) {
                 utilisateur.lastLoginDate = LocalDate.now();
                 repository.update(utilisateur);
