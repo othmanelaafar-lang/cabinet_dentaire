@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ma.dentalTech.common.exceptions.ServiceException;
 import ma.dentalTech.common.exceptions.ValidationException;
-import ma.dentalTech.common.validation.Validators;
 import ma.dentalTech.entities.enums.Statut;
 import ma.dentalTech.entities.rdv.RDV;
 import ma.dentalTech.repository.modules.rdv.RDVRepository;
@@ -28,22 +27,24 @@ public class RDVServiceImpl implements RDVService {
     private void validateRDV(RDV rdv) throws ServiceException {
         try {
             // Vérifier que la date est fournie
-            LocalDate dateRDV = rdv.Date != null ? rdv.Date : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalDate() : null);
+            LocalDate dateRDV = rdv.getDate() != null ? rdv.getDate() : 
+                               (rdv.getDateHeureDebut() != null ? rdv.getDateHeureDebut().toLocalDate() : null);
             if (dateRDV == null) {
                 throw new ValidationException("La date du rendez-vous est obligatoire");
             }
             
             // Vérifier que l'heure est fournie (soit via heure, soit via dateHeureDebut)
-            LocalTime heureRDV = rdv.heure != null ? rdv.heure : (rdv.dateHeureDebut != null ? rdv.dateHeureDebut.toLocalTime() : null);
+            LocalTime heureRDV = rdv.getHeure() != null ? rdv.getHeure() : 
+                                (rdv.getDateHeureDebut() != null ? rdv.getDateHeureDebut().toLocalTime() : null);
             if (heureRDV == null) {
                 throw new ValidationException("L'heure du rendez-vous est obligatoire");
             }
             
-            if (rdv.patientId == null) {
+            if (rdv.getPatientId() == null) {
                 throw new ValidationException("L'ID du patient est obligatoire");
             }
             
-            if (rdv.medecinId == null) {
+            if (rdv.getMedecinId() == null) {
                 throw new ValidationException("L'ID du médecin est obligatoire");
             }
             
@@ -52,11 +53,11 @@ public class RDVServiceImpl implements RDVService {
                 throw new ValidationException("La date du rendez-vous ne peut pas être dans le passé");
             }
             
-            if (rdv.motifConsultation != null && rdv.motifConsultation.trim().length() < 3) {
+            if (rdv.getMotifConsultation() != null && rdv.getMotifConsultation().trim().length() < 3) {
                 throw new ValidationException("Le motif doit contenir au moins 3 caractères");
             }
             
-            if (rdv.motif != null && rdv.motif.trim().length() < 3) {
+            if (rdv.getMotif() != null && rdv.getMotif().trim().length() < 3) {
                 throw new ValidationException("Le motif doit contenir au moins 3 caractères");
             }
         } catch (ValidationException e) {
@@ -87,16 +88,16 @@ public class RDVServiceImpl implements RDVService {
         
         // Vérifier la disponibilité du créneau
         // À ce stade, on est sûr que dateRDV et heureRDV ne sont pas null grâce à validateRDV
-        LocalDate dateRDV = rdv.Date != null ? rdv.Date : rdv.dateHeureDebut.toLocalDate();
-        LocalTime heureRDV = rdv.heure != null ? rdv.heure : rdv.dateHeureDebut.toLocalTime();
+        LocalDate dateRDV = rdv.getDate() != null ? rdv.getDate() : rdv.getDateHeureDebut().toLocalDate();
+        LocalTime heureRDV = rdv.getHeure() != null ? rdv.getHeure() : rdv.getDateHeureDebut().toLocalTime();
         
-        if (!isCreneauDisponible(rdv.medecinId, dateRDV, heureRDV)) {
+        if (!isCreneauDisponible(rdv.getMedecinId(), dateRDV, heureRDV)) {
             throw new ServiceException("Ce créneau n'est pas disponible");
         }
         
         // Définir le statut par défaut
-        if (rdv.statut == null) {
-            rdv.statut = Statut.statut1; // PLANIFIE
+        if (rdv.getStatut() == null) {
+            rdv.setStatut(Statut.statut1); // PLANIFIE
         }
         
         try {
@@ -112,13 +113,13 @@ public class RDVServiceImpl implements RDVService {
             throw new ServiceException("Le rendez-vous ne peut pas être null");
         }
         
-        if (rdv.idRDV == null) {
+        if (rdv.getIdRDV() == null) {
             throw new ServiceException("L'ID du rendez-vous est requis pour la mise à jour");
         }
         
-        RDV existing = repository.findById(rdv.idRDV).orElse(null);
+        RDV existing = repository.findById(rdv.getIdRDV()).orElse(null);
         if (existing == null) {
-            throw new ServiceException("Rendez-vous avec ID " + rdv.idRDV + " introuvable");
+            throw new ServiceException("Rendez-vous avec ID " + rdv.getIdRDV() + " introuvable");
         }
         
         validateRDV(rdv);
@@ -153,8 +154,8 @@ public class RDVServiceImpl implements RDVService {
         if (rdv == null) {
             throw new ServiceException("Le rendez-vous ne peut pas être null");
         }
-        if (rdv.idRDV != null) {
-            deleteById(rdv.idRDV);
+        if (rdv.getIdRDV() != null) {
+            deleteById(rdv.getIdRDV());
         }
     }
 
@@ -194,7 +195,7 @@ public class RDVServiceImpl implements RDVService {
             List<RDV> rdvs = repository.findByDateAndHeure(date, heure);
             // Si tous les RDV à ce créneau sont annulés, le créneau est disponible
             return rdvs.stream()
-                    .allMatch(rdv -> rdv.statut == Statut.statut3); // statut3 = ANNULE
+                    .allMatch(rdv -> rdv.getStatut() == Statut.statut3); // statut3 = ANNULE
         }
         return true; // Pas de RDV à cette date/heure = disponible
     }
@@ -206,7 +207,7 @@ public class RDVServiceImpl implements RDVService {
             throw new ServiceException("Rendez-vous avec ID " + id + " introuvable");
         }
         
-        rdv.statut = Statut.statut3; // ANNULE
+        rdv.setStatut(Statut.statut3); // ANNULE
         update(rdv);
     }
 
@@ -217,7 +218,7 @@ public class RDVServiceImpl implements RDVService {
             throw new ServiceException("Rendez-vous avec ID " + id + " introuvable");
         }
         
-        rdv.statut = Statut.statut2; // CONFIRME
+        rdv.setStatut(Statut.statut2); // CONFIRME
         update(rdv);
     }
 }

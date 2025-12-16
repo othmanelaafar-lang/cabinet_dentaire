@@ -25,11 +25,11 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
     private void validateOrdonnance(Ordonnance ordonnance) throws ServiceException {
         try {
             // Validation basique - peut être étendue selon les besoins
-            if (ordonnance.date == null && ordonnance.dateEmission == null) {
+            if (ordonnance.getDateEmission() == null) {
                 throw new ValidationException("La date de l'ordonnance est obligatoire");
             }
             
-            if (ordonnance.consultationId == null) {
+            if (ordonnance.getConsultationId() == null) {
                 throw new ValidationException("L'ID de la consultation est obligatoire");
             }
         } catch (ValidationException e) {
@@ -71,13 +71,13 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
             throw new ServiceException("L'ordonnance ne peut pas être null");
         }
         
-        if (ordonnance.idOrd == null) {
+        if (ordonnance.getIdOrd() == null) {
             throw new ServiceException("L'ID de l'ordonnance est requis pour la mise à jour");
         }
         
-        Ordonnance existing = repository.findById(ordonnance.idOrd).orElse(null);
+        Ordonnance existing = repository.findById(ordonnance.getIdOrd()).orElse(null);
         if (existing == null) {
-            throw new ServiceException("Ordonnance avec ID " + ordonnance.idOrd + " introuvable");
+            throw new ServiceException("Ordonnance avec ID " + ordonnance.getIdOrd() + " introuvable");
         }
         
         validateOrdonnance(ordonnance);
@@ -112,8 +112,8 @@ public class OrdonnanceServiceImpl implements OrdonnanceService {
         if (ordonnance == null) {
             throw new ServiceException("L'ordonnance ne peut pas être null");
         }
-        if (ordonnance.idOrd != null) {
-            deleteById(ordonnance.idOrd);
+        if (ordonnance.getIdOrd() != null) {
+            deleteById(ordonnance.getIdOrd());
         }
     }
 

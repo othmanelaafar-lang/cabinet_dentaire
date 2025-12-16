@@ -1,7 +1,6 @@
 package ma.dentalTech.service.modules.patient.baseImplementation;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -28,12 +27,12 @@ public class PatientServiceImpl implements PatientService {
 
     /**
      * Formattage de date
-     * @param dt : date Non Formatée
+     * @param date : date Non Formatée
      * @return  date formatée
      */
-    private static String formatDate(java.time.LocalDateTime dt) {
-        if (dt == null) return "";
-        return dt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    private static String formatDate(java.time.LocalDate date) {
+        if (date == null) return "";
+        return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
     /**
@@ -79,8 +78,8 @@ public class PatientServiceImpl implements PatientService {
     public List<PatientDTO> getTodayPatientsAsDTO() {
         LocalDate today = LocalDate.now();
         return repository.findAll().stream()
-                .filter(p -> p.getDateCreation() != null && p.getDateCreation().toLocalDate().equals(today))
-                .sorted(Comparator.comparing(Patient::getDateCreation).reversed())
+                .filter(p -> p.getDateCreation() != null && p.getDateCreation().equals(today))
+                .sorted(Comparator.comparing(Patient::getDateCreation, Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -116,7 +115,7 @@ public class PatientServiceImpl implements PatientService {
         
         // Définir la date de création si elle n'est pas déjà définie
         if (patient.getDateCreation() == null) {
-            patient.setDateCreation(LocalDateTime.now());
+            patient.setDateCreation(LocalDate.now());
         }
         
         try {

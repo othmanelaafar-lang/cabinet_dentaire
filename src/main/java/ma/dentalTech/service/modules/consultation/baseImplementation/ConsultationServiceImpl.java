@@ -25,7 +25,7 @@ public class ConsultationServiceImpl implements ConsultationService {
      */
     private void validateConsultation(Consultation consultation) throws ServiceException {
         try {
-            LocalDate dateConsultation = consultation.dateConsultation != null ? consultation.dateConsultation : consultation.Date;
+            LocalDate dateConsultation = consultation.getDateConsultation();
             if (dateConsultation == null) {
                 throw new ValidationException("La date de consultation est obligatoire");
             }
@@ -35,11 +35,11 @@ public class ConsultationServiceImpl implements ConsultationService {
                 throw new ValidationException("La date de consultation ne peut pas être dans le futur");
             }
             
-            if (consultation.patientId == null) {
+            if (consultation.getPatientId() == null) {
                 throw new ValidationException("L'ID du patient est obligatoire");
             }
             
-            if (consultation.medecinId == null) {
+            if (consultation.getMedecinId() == null) {
                 throw new ValidationException("L'ID du médecin est obligatoire");
             }
         } catch (ValidationException e) {
@@ -69,8 +69,8 @@ public class ConsultationServiceImpl implements ConsultationService {
         validateConsultation(consultation);
         
         // Définir le statut par défaut
-        if (consultation.statut == null) {
-            consultation.statut = Statut.statut1; // EN_COURS
+        if (consultation.getStatut() == null) {
+            consultation.setStatut(Statut.statut1); // EN_COURS
         }
         
         try {
@@ -86,13 +86,13 @@ public class ConsultationServiceImpl implements ConsultationService {
             throw new ServiceException("La consultation ne peut pas être null");
         }
         
-        if (consultation.idConsultation == null) {
+        if (consultation.getIdConsultation() == null) {
             throw new ServiceException("L'ID de la consultation est requis pour la mise à jour");
         }
         
-        Consultation existing = repository.findById(consultation.idConsultation).orElse(null);
+        Consultation existing = repository.findById(consultation.getIdConsultation()).orElse(null);
         if (existing == null) {
-            throw new ServiceException("Consultation avec ID " + consultation.idConsultation + " introuvable");
+            throw new ServiceException("Consultation avec ID " + consultation.getIdConsultation() + " introuvable");
         }
         
         validateConsultation(consultation);
@@ -127,8 +127,8 @@ public class ConsultationServiceImpl implements ConsultationService {
         if (consultation == null) {
             throw new ServiceException("La consultation ne peut pas être null");
         }
-        if (consultation.idConsultation != null) {
-            deleteById(consultation.idConsultation);
+        if (consultation.getIdConsultation() != null) {
+            deleteById(consultation.getIdConsultation());
         }
     }
 
@@ -174,7 +174,7 @@ public class ConsultationServiceImpl implements ConsultationService {
             throw new ServiceException("Consultation avec ID " + id + " introuvable");
         }
         
-        consultation.statut = Statut.statut2; // TERMINE
+        consultation.setStatut(Statut.statut2); // TERMINE
         update(consultation);
     }
 }

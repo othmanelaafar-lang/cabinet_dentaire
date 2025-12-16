@@ -25,15 +25,15 @@ public class FactureServiceImpl implements FactureService {
      */
     private void validateFacture(Facture facture) throws ServiceException {
         try {
-            if (facture.totalepaye < 0) {
+            if (facture.getTotalePaye() != null && facture.getTotalePaye().doubleValue() < 0) {
                 throw new ValidationException("Le montant payé ne peut pas être négatif");
             }
             
-            if (facture.Reste < 0) {
+            if (facture.getReste() != null && facture.getReste().doubleValue() < 0) {
                 throw new ValidationException("Le reste à payer ne peut pas être négatif");
             }
             
-            if (facture.consultationId == null && facture.patientId == null) {
+            if (facture.getConsultationId() == null && facture.getPatientId() == null) {
                 throw new ValidationException("L'ID de la consultation ou du patient est obligatoire");
             }
         } catch (ValidationException e) {
@@ -63,17 +63,18 @@ public class FactureServiceImpl implements FactureService {
         validateFacture(facture);
         
         // Définir la date par défaut
-        if (facture.dateFacture == null) {
-            facture.dateFacture = LocalDateTime.now();
+        if (facture.getDateFacture() == null) {
+            facture.setDateFacture(LocalDateTime.now());
         }
         
         // Définir le statut par défaut
-        if (facture.statut == null) {
-            facture.statut = Statut.statut1; // EN_ATTENTE
+        if (facture.getStatut() == null) {
+            facture.setStatut(Statut.statut1); // EN_ATTENTE
         }
         
         // Calculer le reste si nécessaire
-        if (facture.Reste == 0 && facture.totalepaye > 0) {
+        if (facture.getReste() != null && facture.getReste().doubleValue() == 0 && 
+            facture.getTotalePaye() != null && facture.getTotalePaye().doubleValue() > 0) {
             // Le reste sera calculé en fonction du total de la consultation
             // Pour l'instant, on laisse tel quel
         }
@@ -91,13 +92,13 @@ public class FactureServiceImpl implements FactureService {
             throw new ServiceException("La facture ne peut pas être null");
         }
         
-        if (facture.idFacture == null) {
+        if (facture.getIdFacture() == null) {
             throw new ServiceException("L'ID de la facture est requis pour la mise à jour");
         }
         
-        Facture existing = repository.findById(facture.idFacture).orElse(null);
+        Facture existing = repository.findById(facture.getIdFacture()).orElse(null);
         if (existing == null) {
-            throw new ServiceException("Facture avec ID " + facture.idFacture + " introuvable");
+            throw new ServiceException("Facture avec ID " + facture.getIdFacture() + " introuvable");
         }
         
         validateFacture(facture);
@@ -132,8 +133,8 @@ public class FactureServiceImpl implements FactureService {
         if (facture == null) {
             throw new ServiceException("La facture ne peut pas être null");
         }
-        if (facture.idFacture != null) {
-            deleteById(facture.idFacture);
+        if (facture.getIdFacture() != null) {
+            deleteById(facture.getIdFacture());
         }
     }
 
@@ -170,7 +171,7 @@ public class FactureServiceImpl implements FactureService {
             return 0.0;
         }
         return findByPatientId(patientId).stream()
-                .mapToDouble(f -> f.totalepaye)
+                .mapToDouble(f -> f.getTotalePaye() != null ? f.getTotalePaye().doubleValue() : 0.0)
                 .sum();
     }
 
@@ -180,7 +181,7 @@ public class FactureServiceImpl implements FactureService {
             return 0.0;
         }
         return findByPatientId(patientId).stream()
-                .mapToDouble(f -> f.Reste)
+                .mapToDouble(f -> f.getReste() != null ? f.getReste().doubleValue() : 0.0)
                 .sum();
     }
 
@@ -199,12 +200,22 @@ public class FactureServiceImpl implements FactureService {
             throw new ServiceException("Facture avec ID " + factureId + " introuvable");
         }
         
-        facture.totalepaye += montant;
-        facture.Reste = Math.max(0, facture.Reste - montant);
+        java.math.BigDecimal nouveauTotalPaye = facture.getTotalePaye() != null ? 
+            facture.getTotalePaye().add(java.math.BigDecimal.valueOf(montant)) : 
+            java.math.BigDecimal.valueOf(montant);
+        facture.setTotalePaye(nouveauTotalPaye);
+        
+        java.math.BigDecimal nouveauReste = facture.getReste() != null ? 
+            facture.getReste().subtract(java.math.BigDecimal.valueOf(montant)) : 
+            java.math.BigDecimal.ZERO;
+        if (nouveauReste.doubleValue() < 0) {
+            nouveauReste = java.math.BigDecimal.ZERO;
+        }
+        facture.setReste(nouveauReste);
         
         // Si le reste est à 0, marquer comme payée
-        if (facture.Reste == 0) {
-            facture.statut = Statut.statut2; // PAYEE
+        if (nouveauReste.doubleValue() == 0) {
+            facture.setStatut(Statut.statut2); // PAYEE
         }
         
         update(facture);
@@ -217,8 +228,8 @@ public class FactureServiceImpl implements FactureService {
             throw new ServiceException("Facture avec ID " + id + " introuvable");
         }
         
-        facture.statut = Statut.statut2; // PAYEE
-        facture.Reste = 0;
+        facture.setStatut(Statut.statut2); // PAYEE
+        facture.setReste(java.math.BigDecimal.ZERO);
         update(facture);
     }
 }

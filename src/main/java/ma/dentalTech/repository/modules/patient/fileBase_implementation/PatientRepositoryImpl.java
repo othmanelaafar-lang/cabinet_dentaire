@@ -10,7 +10,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -81,7 +80,15 @@ public class PatientRepositoryImpl implements PatientRepository {
         return readAllLines().stream()
                 .skip(1)
                 .filter(line -> !line.isBlank())
-                .map(this::toPatient)
+                .map(line -> {
+                    try {
+                        return toPatient(line);
+                    } catch (Exception e) {
+                        System.err.println("Erreur lors du parsing de la ligne: " + line + " - " + e.getMessage());
+                        return null; // Ignorer les lignes invalides
+                    }
+                })
+                .filter(Objects::nonNull) // Filtrer les lignes qui ont échoué
                 .collect(Collectors.toList());
     }
 
@@ -100,7 +107,7 @@ public class PatientRepositoryImpl implements PatientRepository {
                              .max().orElse(0) + 1;
         patient.setId(newId);
         if (patient.getDateCreation() == null)
-            patient.setDateCreation(LocalDateTime.now());
+            patient.setDateCreation(LocalDate.now());
         patients.add(patient);
         // Utiliser la méthode privée pour écrire directement dans le fichier
         saveAllToFile(patients);
@@ -214,6 +221,11 @@ public class PatientRepositoryImpl implements PatientRepository {
 
     private Patient toPatient(String line) {
         String[] t = line.split("\\|", -1);
+        // Vérifier que le tableau a au moins 10 éléments (selon le format attendu)
+        if (t.length < 10) {
+            throw new RuntimeException("Ligne invalide dans patients.psv : " + line);
+        }
+        
         Patient p = new Patient();
         p.setId(parseLong(t[0]));
         p.setNom(parseNullableString(t[1]));
@@ -222,7 +234,7 @@ public class PatientRepositoryImpl implements PatientRepository {
         p.setTelephone(parseNullableString(t[4]));
         p.setEmail(parseNullableString(t[5]));
         p.setDateNaissance(parseNullableLocalDate(t[6]));
-        p.setDateCreation(parseNullableLocalDateTime(t[7]));
+        p.setDateCreation(parseNullableLocalDate(t[7])); // dateCreation est LocalDate, pas LocalDateTime
         p.setSexe(parseSexe(t[8]));
         p.setAssurance(parseAssurance(t[9]));
         return p;
@@ -236,12 +248,17 @@ public class PatientRepositoryImpl implements PatientRepository {
 
     private LocalDate parseNullableLocalDate(String s) {
         if (s == null || s.isBlank() || s.equalsIgnoreCase("null")) return null;
-        return LocalDate.parse(s.trim());
-    }
-
-    private LocalDateTime parseNullableLocalDateTime(String s) {
-        if (s == null || s.isBlank() || s.equalsIgnoreCase("null")) return null;
-        return LocalDateTime.parse(s.trim());
+        try {
+            String trimmed = s.trim();
+            // Si le format contient 'T' (format LocalDateTime), extraire seulement la date
+            // Cela permet de gérer la compatibilité avec les anciens fichiers
+            if (trimmed.contains("T")) {
+                trimmed = trimmed.substring(0, trimmed.indexOf("T"));
+            }
+            return LocalDate.parse(trimmed);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private Sexe parseSexe(String s) {

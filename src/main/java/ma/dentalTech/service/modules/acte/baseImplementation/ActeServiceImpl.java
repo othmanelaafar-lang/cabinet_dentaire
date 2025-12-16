@@ -25,11 +25,12 @@ public class ActeServiceImpl implements ActeService {
      */
     private void validateActe(Acte acte) throws ServiceException {
         try {
-            Validators.notBlank(acte.code, "Le code");
-            Validators.notBlank(acte.libelle, "Le libellé");
-            Validators.minLen(acte.libelle, 3, "Le libellé");
+            Validators.notBlank(acte.getCode(), "Le code");
+            Validators.notBlank(acte.getLibelle(), "Le libellé");
+            Validators.minLen(acte.getLibelle(), 3, "Le libellé");
             
-            double prix = acte.prixUnitaire != null ? acte.prixUnitaire.doubleValue() : acte.prixDeBase;
+            double prix = acte.getPrixUnitaire() != null ? acte.getPrixUnitaire().doubleValue() : 
+                         (acte.getPrixDeBase() != null ? acte.getPrixDeBase().doubleValue() : 0.0);
             if (prix < 0) {
                 throw new ValidationException("Le prix ne peut pas être négatif");
             }
@@ -72,13 +73,13 @@ public class ActeServiceImpl implements ActeService {
             throw new ServiceException("L'acte ne peut pas être null");
         }
         
-        if (acte.idActe == null) {
+        if (acte.getIdActe() == null) {
             throw new ServiceException("L'ID de l'acte est requis pour la mise à jour");
         }
         
-        Acte existing = repository.findById(acte.idActe).orElse(null);
+        Acte existing = repository.findById(acte.getIdActe()).orElse(null);
         if (existing == null) {
-            throw new ServiceException("Acte avec ID " + acte.idActe + " introuvable");
+            throw new ServiceException("Acte avec ID " + acte.getIdActe() + " introuvable");
         }
         
         validateActe(acte);
@@ -113,8 +114,8 @@ public class ActeServiceImpl implements ActeService {
         if (acte == null) {
             throw new ServiceException("L'acte ne peut pas être null");
         }
-        if (acte.idActe != null) {
-            deleteById(acte.idActe);
+        if (acte.getIdActe() != null) {
+            deleteById(acte.getIdActe());
         }
     }
 
@@ -133,7 +134,7 @@ public class ActeServiceImpl implements ActeService {
         }
         // Recherche dans tous les actes par libellé
         return repository.findAll().stream()
-                .filter(acte -> acte.libelle != null && acte.libelle.toLowerCase().contains(libelle.trim().toLowerCase()))
+                .filter(acte -> acte.getLibelle() != null && acte.getLibelle().toLowerCase().contains(libelle.trim().toLowerCase()))
                 .collect(Collectors.toList());
     }
 
@@ -146,8 +147,8 @@ public class ActeServiceImpl implements ActeService {
         String term = searchTerm.trim().toLowerCase();
         return repository.findAll().stream()
                 .filter(acte -> {
-                    boolean matchLibelle = acte.libelle != null && acte.libelle.toLowerCase().contains(term);
-                    boolean matchCategorie = acte.categorie != null && acte.categorie.toLowerCase().contains(term);
+                    boolean matchLibelle = acte.getLibelle() != null && acte.getLibelle().toLowerCase().contains(term);
+                    boolean matchCategorie = acte.getCategorie() != null && acte.getCategorie().toLowerCase().contains(term);
                     return matchLibelle || matchCategorie;
                 })
                 .collect(Collectors.toList());
